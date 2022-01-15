@@ -1,0 +1,70 @@
+version: '2'
+services: 
+    database: 
+        container_name: db_lara_forms1
+        image: mysql:5.6
+        volumes: 
+            - dbdata:/var/lib/mysql
+        environment: 
+            - "MYSQL_DATABASE=lara_forms1"
+            - "MYSQL_USER=laraenv"
+            - "MYSQL_PASSWORD=secret"
+            - "MYSQL_ROOT_PASSWORD=1234567"
+            - "MYSQL_PORT=3306"
+        ports: 
+            - 3306:3306    
+        networks: 
+            appLaravel: 
+                ipv4_address: 172.20.0.2
+
+    app: 
+        container_name: app_laravel_forms1
+        build: 
+            context: . 
+            dockerfile: app.Dockerfile
+        ports: 
+            - 8001:8000    
+        working_dir: /var/www
+        volumes: 
+            - /var/www/storage
+            - ./:/var/www
+        env_file: '.env'
+        environment: 
+            - "DB_HOST=database"
+            - "DB_PORT=3306"
+        links: 
+            - database
+        depends_on: 
+            - database
+        networks: 
+            appLaravel: 
+                ipv4_address: 172.20.0.3
+    
+    web: 
+        container_name: nginx
+        build: 
+            context: . 
+            dockerfile: web.Dockerfile
+        ports: 
+            - 8080:80
+        links: 
+            - app
+        networks: 
+            - appLaravel    
+        volumes: 
+            - ./:/var/www 
+            - ./access.log:/var/log/nginx/access.log
+            - ./error.log:/var/log/nginx/error.log 
+        networks: 
+            appLaravel:
+                ipv4_address: 172.20.0.4
+
+networks: 
+    appLaravel:   
+        driver: bridge
+        ipam: 
+            config: 
+                - subnet: 172.20.0.0/16
+                  gateway: 172.20.0.1     
+volumes: 
+    dbdata:
