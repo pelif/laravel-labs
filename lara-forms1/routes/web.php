@@ -20,4 +20,5 @@ Route::group([
     'namespace' => 'Admin'
 ], function() {
     Route::resource('clients', 'ClientsController'); 
+    Route::get('/teste/list', 'ClientsController@list');
 }); 

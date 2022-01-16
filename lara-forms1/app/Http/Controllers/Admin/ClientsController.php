@@ -4,18 +4,34 @@ namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ClientStore;
+use App\Repositories\ClientRepository;
+use App\Services\ClientService;
 
 class ClientsController extends Controller
-{
+{    
+    private $service; 
+    private $repository; 
+
+    public function __construct(ClientService $service, ClientRepository $client)
+    {
+        $this->service = $service;
+        $this->repository = $client;            
+    }
+
+    public function list() 
+    {        
+        dump($this->repository->all());
+    }
+    
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {
-        $clients = \App\Model\Client::all();        
-        return view('admin.clients.index', ['clients' => $clients]);         
+    {        
+        return view('admin.clients.index', ['clients' => $this->repository->all()]);         
     }
 
     /**
@@ -25,7 +41,7 @@ class ClientsController extends Controller
      */
     public function create()
     {        
-        return view('admin.clients.create', ['client' => new \App\Model\Client()]); 
+        return view('admin.clients.create', ['client' => $this->repository->model]); 
     }
 
     /**
@@ -34,12 +50,9 @@ class ClientsController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        $this->_validate($request); 
-        $data = $request->all();
-        $data['defaulter'] = $request->has('defaulter'); 
-        \App\Model\Client::create($data);
+    public function store(ClientStore $request)
+    {        
+        $this->service->store($request); 
         return redirect()->route('clients.index'); 
     }
 
@@ -68,17 +81,13 @@ class ClientsController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Model\Client $client
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, \App\Model\Client $client)
-    {        
-        $this->_validate($request); 
-        $data = $request->all();
-        $data['defaulter'] = $request->has('defaulter'); 
-        $client->fill($data); 
-        $client->save();
+    public function update(ClientStore $request, \App\Model\Client $client)
+    {               
+        $this->service->update($request, $client);
         return redirect()->route('clients.index'); 
     }
 
@@ -93,23 +102,5 @@ class ClientsController extends Controller
         $client->delete();
         return redirect()->route('clients.index'); 
     }
-
-    /**
-     * Fields Form Validations 
-     * 
-     * @param  \Illuminate\Http\Request  $request
-     * @return void
-     */
-    protected function _validate(Request $request) {
-        $maritalStatus = implode(array_keys(\App\Model\Client::MARITAL_STATUS)); 
-        $this->validate($request, [
-            'document_number' => 'required',
-            'email' => 'required|email',
-            'phone' => 'required',
-            'date_birth' => 'required|date',
-            'marital_status' => 'required|in:1,2,3',
-            'sex' => 'required|in:m,M,f,F',
-            'physical_desability' => 'max:255'
-        ]);
-    }
+    
 }
