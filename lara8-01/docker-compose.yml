@@ -1,0 +1,28 @@
+version: '2'
+services: 
+    dbLaravel8: 
+        container_name: db_laravel8
+        image: mysql:5.7
+        volumes: 
+            - appdb:/var/lib/mysql
+        environment: 
+            - "MYSQL_DATABASE=laravel8"
+            - "MYSQL_USER=laravel8"
+            - "MYSQL_PASSWORD=laravel8"
+            - "MYSQL_ROOT_PASSWORD=1234567"
+            - "MYSQL_PORT=3306"
+        ports: 
+            - 3306:3306    
+        networks: 
+            laravel8: 
+                ipv4_address: 172.15.0.2    
+
+networks: 
+    laravel8:   
+        driver: bridge
+        ipam: 
+            config: 
+                - subnet: 172.15.0.0/16
+                  gateway: 172.15.0.1     
+volumes: 
+    appdb:
